@@ -11,7 +11,7 @@
 
 {-|
 
-Module: LocalCooking.Dependencies.AccessToken.Generic
+Module: Local Cooking.Dependencies.AccessToken.Generic
 Copyright: (c) 2018 Local Cooking Inc.
 License: Proprietary
 Maintainer: athan.clark@localcooking.com
