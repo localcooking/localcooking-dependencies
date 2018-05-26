@@ -22,14 +22,21 @@ description:         Please see the README on GitHub at <https://github.com/gith
 dependencies:
 - base >= 4.7 && < 5
 - localcooking-shared
+- localcooking-fb
+- localcooking-db
+- localcooking-function
 - aeson
 - async
+- emailaddress
 - extractable-singleton
 - hashable
 - monad-control-aligned
+- mtl
 - newtype
+- QuickCheck
 - sparrow >= 0.0.2.0
 - stm
+- text
 - time
 - timemap >= 0.0.7
 - tmapchan
