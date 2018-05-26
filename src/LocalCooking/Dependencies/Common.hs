@@ -22,4 +22,3 @@ getUserServer = staticServer (getUser . withAuthTokenAuthToken)
 setUserServer :: Server AppM [] (WithAuthTokenIn User) JSONUnit JSONVoid JSONVoid
 setUserServer = staticServer (fmap boolToUnit . uncurryWithAuthToken setUser)
 
-
