@@ -5,6 +5,7 @@
   , MultiParamTypeClasses
   , DeriveGeneric
   , FlexibleContexts
+  , RecordWildCards
   , GeneralizedNewtypeDeriving
   #-}
 
@@ -228,3 +229,57 @@ authTokenServer initIn = do
   accessTokenServer tokenContextAuth getAuthToken
     (\revoke AuthTokenDeltaInLogout -> revoke)
     (\_ -> pure ()) initIn
+
+
+-- * Generics for dependencies that use an AuthToken as a prerequisite
+
+
+data WithAuthTokenIn a = WithAuthTokenIn
+  { withAuthTokenAuthToken :: AuthToken
+  , withAuthToken :: a
+  } deriving (Eq, Show)
+
+instance Arbitrary a => Arbitrary (WithAuthTokenIn a) where
+  arbitrary = WithAuthTokenIn <$> arbitrary <*> arbitrary
+
+instance ToJSON a => ToJSON (WithAuthTokenIn a) where
+  toJSON WithAuthTokenIn{..} = object
+    [ "authToken" .= withAuthTokenAuthToken
+    , "content" .= withAuthToken
+    ]
+
+instance FromJSON a => FromJSON (WithAuthTokenIn a) where
+  parseJSON json = case json of
+    Object o -> WithAuthTokenIn <$> o .: "authToken" <*> o .: "content"
+    _ -> typeMismatch "WithAuthTokenIn" json
+
+
+uncurryWithAuthToken :: (AuthToken -> a -> b) -> WithAuthTokenIn a -> b
+uncurryWithAuthToken f (WithAuthTokenIn a x) = f a x
+
+
+
+data WithAuthTokenOut a
+  = WithAuthTokenNoAuth
+  | WithAuthTokenOut a
+
+instance Arbitrary a => Arbitrary (WithAuthTokenOut a) where
+  arbitrary = oneof
+    [ pure WithAuthTokenNoAuth
+    , WithAuthTokenOut <$> arbitrary
+    ]
+
+instance ToJSON a => ToJSON (WithAuthTokenOut a) where
+  toJSON x = case x of
+    WithAuthTokenNoAuth -> String "noAuth"
+    WithAuthTokenOut x -> object ["content" .= x]
+
+instance FromJSON a => FromJSON (WithAuthTokenOut a) where
+  parseJSON json = case json of
+    Object o -> WithAuthTokenOut <$> o .: "content"
+    String s
+      | s == "noAuth" -> pure WithAuthTokenNoAuth
+      | otherwise -> fail'
+    _ -> fail'
+    where
+      fail' = typeMismatch "WithAuthTokenOut" json
